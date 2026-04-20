@@ -18,10 +18,10 @@ import {Constants} from "@uniswap/v4-core/test/utils/Constants.sol";
 
 import {EasyPosm} from "./utils/libraries/EasyPosm.sol";
 
-import {Counter} from "../src/Counter.sol";
+import {PointsHook} from "../src/PointsHook.sol";
 import {BaseTest} from "./utils/BaseTest.sol";
 
-contract CounterTest is BaseTest {
+contract PointsHookTest is BaseTest {
     using EasyPosm for IPositionManager;
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
@@ -32,7 +32,7 @@ contract CounterTest is BaseTest {
 
     PoolKey poolKey;
 
-    Counter hook;
+    PointsHook hook;
     PoolId poolId;
 
     uint256 tokenId;
@@ -53,8 +53,8 @@ contract CounterTest is BaseTest {
             ) ^ (0x4444 << 144) // Namespace the hook to avoid collisions
         );
         bytes memory constructorArgs = abi.encode(poolManager); // Add all the necessary constructor arguments from the hook
-        deployCodeTo("Counter.sol:Counter", constructorArgs, flags);
-        hook = Counter(flags);
+        deployCodeTo("PointsHook.sol:PointsHook", constructorArgs, flags);
+        hook = PointsHook(flags);
 
         // Create the pool
         poolKey = PoolKey(currency0, currency1, 3000, 60, IHooks(hook));
@@ -87,51 +87,51 @@ contract CounterTest is BaseTest {
         );
     }
 
-    function testCounterHooks() public {
-        // positions were created in setup()
-        assertEq(hook.beforeAddLiquidityCount(poolId), 1);
-        assertEq(hook.beforeRemoveLiquidityCount(poolId), 0);
+    // function testPointsHookHooks() public {
+    //     // positions were created in setup()
+    //     assertEq(hook.beforeAddLiquidityCount(poolId), 1);
+    //     assertEq(hook.beforeRemoveLiquidityCount(poolId), 0);
 
-        assertEq(hook.beforeSwapCount(poolId), 0);
-        assertEq(hook.afterSwapCount(poolId), 0);
+    //     assertEq(hook.beforeSwapCount(poolId), 0);
+    //     assertEq(hook.afterSwapCount(poolId), 0);
 
-        // Perform a test swap //
-        uint256 amountIn = 1e18;
-        BalanceDelta swapDelta = swapRouter.swapExactTokensForTokens({
-            amountIn: amountIn,
-            amountOutMin: 0, // Very bad, but we want to allow for unlimited price impact
-            zeroForOne: true,
-            poolKey: poolKey,
-            hookData: Constants.ZERO_BYTES,
-            receiver: address(this),
-            deadline: block.timestamp + 1
-        });
-        // ------------------- //
+    //     // Perform a test swap //
+    //     uint256 amountIn = 1e18;
+    //     BalanceDelta swapDelta = swapRouter.swapExactTokensForTokens({
+    //         amountIn: amountIn,
+    //         amountOutMin: 0, // Very bad, but we want to allow for unlimited price impact
+    //         zeroForOne: true,
+    //         poolKey: poolKey,
+    //         hookData: Constants.ZERO_BYTES,
+    //         receiver: address(this),
+    //         deadline: block.timestamp + 1
+    //     });
+    //     // ------------------- //
 
-        assertEq(int256(swapDelta.amount0()), -int256(amountIn));
+    //     assertEq(int256(swapDelta.amount0()), -int256(amountIn));
 
-        assertEq(hook.beforeSwapCount(poolId), 1);
-        assertEq(hook.afterSwapCount(poolId), 1);
-    }
+    //     assertEq(hook.beforeSwapCount(poolId), 1);
+    //     assertEq(hook.afterSwapCount(poolId), 1);
+    // }
 
-    function testLiquidityHooks() public {
-        // positions were created in setup()
-        assertEq(hook.beforeAddLiquidityCount(poolId), 1);
-        assertEq(hook.beforeRemoveLiquidityCount(poolId), 0);
+    // function testLiquidityHooks() public {
+    //     // positions were created in setup()
+    //     assertEq(hook.beforeAddLiquidityCount(poolId), 1);
+    //     assertEq(hook.beforeRemoveLiquidityCount(poolId), 0);
 
-        // remove liquidity
-        uint256 liquidityToRemove = 1e18;
-        positionManager.decreaseLiquidity(
-            tokenId,
-            liquidityToRemove,
-            0, // Max slippage, token0
-            0, // Max slippage, token1
-            address(this),
-            block.timestamp,
-            Constants.ZERO_BYTES
-        );
+    //     // remove liquidity
+    //     uint256 liquidityToRemove = 1e18;
+    //     positionManager.decreaseLiquidity(
+    //         tokenId,
+    //         liquidityToRemove,
+    //         0, // Max slippage, token0
+    //         0, // Max slippage, token1
+    //         address(this),
+    //         block.timestamp,
+    //         Constants.ZERO_BYTES
+    //     );
 
-        assertEq(hook.beforeAddLiquidityCount(poolId), 1);
-        assertEq(hook.beforeRemoveLiquidityCount(poolId), 1);
-    }
+    //     assertEq(hook.beforeAddLiquidityCount(poolId), 1);
+    //     assertEq(hook.beforeRemoveLiquidityCount(poolId), 1);
+    // }
 }
