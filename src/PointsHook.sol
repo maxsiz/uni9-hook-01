@@ -81,8 +81,6 @@ contract PointsHook is BaseHook, ERC1155 {
      
         return (this.afterSwap.selector, 0);
 
-        // We'll add more code here shortly
-        return (this.afterSwap.selector, 0);
     }
 
     function _assignPoints(
